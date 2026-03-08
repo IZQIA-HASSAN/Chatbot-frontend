@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import hamburger from "../assets/hamburger.svg";
 import cross from "../assets/cross-svgrepo-com.svg"
 import { useNavigate } from "react-router-dom";
+import settings from "../assets/settings.svg"
 
 
 
@@ -53,16 +54,28 @@ const handlesignup = ()=>{
 
       {/* Sidebar */}
       <div
-        className={`border w-64 p-3 bg-white
+        className={`border w-64 p-3 bg-gray-200
         fixed lg:static top-0 left-0 h-screen
         transform transition-transform duration-300
         ${open ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0 z-10 flex flex-col`}
+        lg:translate-x-0 z-10 flex flex-col `}
       >
          <div className="flex justify-end mr-3 lg:hidden"><button onClick={()=> setOpen(false)}> <img src={cross} style={{width:20}} alt="" /> </button></div>
-        this is the side bar <br />
-        it will grow
-       
+        
+       <div className="border h-[500px] mt-5 p-2 rounded-md shadow-2xl bg-gray-100">
+        <h1 className="text-2xl  font-bold border border-t-0 border-l-0 border-r-0">CHAT HISTORY</h1>
+       </div>
+       <div className="border mt-5 h-50 rounded-md shadow-2xl bg-gray-100">
+
+        <div className="flex items-center gap-2">
+<div className="border rounded-full w-15 h-15 p-2 m-2"></div>
+<div>Izqia</div>
+<div className="flex justify-end  w-20"><button className="transition-all duration-100 ease-out scale-95  active:scale-105 cursor-pointer"><img src={settings} style={{width:30}} alt="" /></button></div>
+</div>
+
+<div className="flex justify-center items-center "><button className="bg-black text-white h-10 w-30 rounded-md mt-10 ">Go premium</button></div>
+
+       </div>
       </div>
 
       {/* Overlay (mobile only) */}
@@ -108,13 +121,13 @@ const handlesignup = ()=>{
         <div className="p-3 flex justify-center items-center border rounded-md">
           <textarea
             value={input}
-            className="p-2 w-full rounded-md"
+            className="p-2 w-full rounded-md focus:outline-none"
             placeholder="Lets chat"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey)
                 //  e.preventDefault()
-                 sendMessage();
+                 sendMessage()
             }}
           />
           <button
