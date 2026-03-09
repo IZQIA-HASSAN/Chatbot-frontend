@@ -73,7 +73,7 @@ const handlesignup = ()=>{
 <div className="flex justify-end  w-20"><button className="transition-all duration-100 ease-out scale-95  active:scale-105 cursor-pointer"><img src={settings} style={{width:30}} alt="" /></button></div>
 </div>
 
-<div className="flex justify-center items-center "><button className="bg-black text-white h-10 w-30 rounded-md mt-10 ">Go premium</button></div>
+<div className="flex justify-center items-center "><button className="bg-black text-white h-10 w-30 rounded-md mt-10 cursor-pointer transition-all duration-100 ease-in-out scale-110 active:scale-95 ">Go premium</button></div>
 
        </div>
       </div>
@@ -89,8 +89,8 @@ const handlesignup = ()=>{
       {/* Main chat area */}
       <div className="border flex-1 flex flex-col p-2 relative">
         <div className="flex justify-end gap-5">
-          <button onClick={handlesignup} className="text-white bg-black w-20 h-8 rounded-md">signup</button>
-                    <button onClick={ handlenavigate} className="text-white bg-black w-20 h-8 rounded-md">Login</button>
+          <button onClick={handlesignup} className="text-white bg-black w-20 h-8 rounded-md cursor-pointer transition-all duration-100 ease-in-out scale-110 active:scale-95">signup</button>
+                    <button onClick={ handlenavigate} className="text-white bg-black w-20 h-8 cursor-pointer rounded-md transition-all duration-100 ease-in-out scale-110 active:scale-95">Login</button>
 
           </div>
 
@@ -132,7 +132,7 @@ const handlesignup = ()=>{
           />
           <button
             onClick={sendMessage}
-            className="border rounded-md w-20 h-10 bg-black text-white font-bold ml-2"
+            className="border rounded-md w-20 h-10 bg-black text-white cursor-pointer font-bold ml-2 transition-all duration-100 ease-out scale-100 active:scale-95"
           >
             send
           </button>
