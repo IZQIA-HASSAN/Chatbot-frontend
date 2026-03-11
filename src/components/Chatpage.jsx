@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import hamburger from "../assets/hamburger.svg";
 import cross from "../assets/cross-svgrepo-com.svg"
 import { useNavigate } from "react-router-dom";
-import settings from "../assets/settings.svg"
+import settings from "../assets/settings.svg";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 
 
@@ -12,6 +14,11 @@ const Chatpage = () => {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
     const navigate = useNavigate()
+    const messageendref  = useRef(null)
+
+    useEffect(()=>{
+      messageendref.current?.scrollIntoView({behaviour:"smooth"})
+    },[messages])
 
 const handlenavigate = ()=>{
 
@@ -20,30 +27,36 @@ const handlenavigate = ()=>{
 const handlesignup = ()=>{
   navigate("./signup")
 }
-  const sendMessage = () => {
-    if (input.trim() === "") return;
+  const sendMessage = async () => {
+    if(input.trim() === "") return
+    const Usermsg = {text:input , sender:"user"};
+    setMessages(prev => [...prev , Usermsg]);
+    setInput("")
 
-    const newmessage = {
-      text: input,
-      sender: "user",
-    };
+    try{
+      const response = await fetch("http://localhost:3001/chat" ,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          messages:[...messages , Usermsg].map(m=>({
+            role:m.sender === "user"? "user" :"assistant",
+            content:m.text,
+          }))
+        })
+      })
+      const data = await response.json()
+      setMessages(prev=>[...prev , {text:data.reply , sender:"bot"}])
+
+    }catch(error){
+      setMessages(prev=>[...prev ,{text:"something went wrong , try again " , sender:"bot"}])
+    }
 
 
-    setMessages([...messages, newmessage]);
-    setInput("");
-
-    setTimeout(() => {
-      const botMessage = {
-        text :"this is dumy response ",
-        sender : "bot"
-      };
-      setMessages((prev)=>[...prev , botMessage])
-      // setMessages([...messages , botMessage])
-    }, 800);
+    
   };
 
   return (
-    <div className="flex h-screen mt-2">
+    <div className="flex max-h-screen mt-2 ">
       {/* Hamburger Button */}
       <button
         className="lg:hidden p-4  absolute z-10"
@@ -54,7 +67,7 @@ const handlesignup = ()=>{
 
       {/* Sidebar */}
       <div
-        className={`border w-64 p-3 bg-gray-200
+        className={` w-64 p-3 bg-gray-200
         fixed lg:static top-0 left-0 h-screen
         transform transition-transform duration-300
         ${open ? "translate-x-0" : "-translate-x-full"}
@@ -62,12 +75,12 @@ const handlesignup = ()=>{
       >
          <div className="flex justify-end mr-3 lg:hidden"><button onClick={()=> setOpen(false)}> <img src={cross} style={{width:20}} alt="" /> </button></div>
         
-       <div className="border h-[500px] mt-5 p-2 rounded-md shadow-2xl bg-gray-100">
+       <div className="border-gray-400 h-[500px] mt-5 p-2 rounded-md shadow-2xl bg-gray-100">
         <h1 className="text-2xl  font-bold border border-t-0 border-l-0 border-r-0">CHAT HISTORY</h1>
        </div>
-       <div className="border mt-5 h-50 rounded-md shadow-2xl bg-gray-100">
+       <div className="border-gray-400 mt-5 h-50 rounded-md shadow-2xl bg-gray-100">
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center   gap-2">
 <div className="border rounded-full w-15 h-15 p-2 m-2"></div>
 <div>Izqia</div>
 <div className="flex justify-end  w-20"><button className="transition-all duration-100 ease-out scale-95  active:scale-105 cursor-pointer"><img src={settings} style={{width:30}} alt="" /></button></div>
@@ -96,7 +109,7 @@ const handlesignup = ()=>{
 
 
         {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+     <div className="flex-1 overflow-y-auto p-2 space-y-2">
   {messages.map((msg, index) => (
     <div
       key={index}
@@ -105,17 +118,41 @@ const handlesignup = ()=>{
       }`}
     >
       <div
-        className={`p-2 rounded-lg max-w-xs ${
+        className={`p-2 shadow-2xl rounded-lg mt-10 ${
           msg.sender === "user"
             ? "bg-blue-500 text-white"
-            : "bg-gray-200 text-black"
+            : "bg-gray-200 text-black font-light font-serif"
         }`}
       >
-        {msg.text}
+        {msg.sender === "bot" ? (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+              strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+              ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
+              ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
+              li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
+              code: ({node, inline, ...props}) =>
+                inline
+                  ? <code className="bg-gray-300 px-1 py-0.5 rounded text-sm font-mono" {...props} />
+                  : <code className="block bg-gray-800 text-green-400 p-3 rounded-lg text-sm font-mono overflow-x-auto my-2" {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-xl font-bold mb-2" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-lg font-bold mb-2" {...props} />,
+              h3: ({node, ...props}) => <h3 className="font-bold mb-1" {...props} />,
+            }}
+          >
+            {msg.text}
+          </ReactMarkdown>
+        ) : (
+          msg.text
+        )}
       </div>
     </div>
   ))}
+  <div ref={messageendref} />
 </div>
+
 
         {/* Input */}
         <div className="p-3 flex justify-center items-center border rounded-md">
