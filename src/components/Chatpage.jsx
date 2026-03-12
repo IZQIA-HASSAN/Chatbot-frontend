@@ -13,8 +13,26 @@ const Chatpage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
+  const [typing , setIsTyping] = useState(false)
+const textarearef = useRef(null)
+  const [currentChatId, setcurrentChatId] = useState(Date.now().toString());
+  const [chats , setChats] = useState(()=>{
+    const saved = localStorage.getItem("chats")
+    return saved ? JSON.parse(saved) : {}
+  })
+
     const navigate = useNavigate()
     const messageendref  = useRef(null)
+
+    useEffect(()=>{
+      if(messages.length === 0) return
+      const updatedChats = {
+        ...chats,
+        [currentChatId]:messages
+      }
+      setChats(updatedChats)
+      localStorage.setItem("chats" , JSON.stringify(updatedChats))
+    }, [messages])
 
     useEffect(()=>{
       messageendref.current?.scrollIntoView({behaviour:"smooth"})
@@ -27,11 +45,38 @@ const handlenavigate = ()=>{
 const handlesignup = ()=>{
   navigate("./signup")
 }
+const startnewchat = ()=>{
+  const newid = Date.now().toString()
+  setcurrentChatId(newid)
+  setMessages([])
+}
+
+const loadChat = (id)=>{
+  setcurrentChatId(id)
+  setMessages(chats[id])
+  setOpen(false)
+}
+const deletechat = (id)=>{
+  const updatedChats = {...chats}
+  delete updatedChats[id]
+  setChats(updatedChats)
+   localStorage.setItem(updatedChats)
+     localStorage.setItem("chats", JSON.stringify(updatedChats));
+
+     if (id === currentChatId) {
+    startnewchat();
+  }
+ 
+}
   const sendMessage = async () => {
     if(input.trim() === "") return
     const Usermsg = {text:input , sender:"user"};
     setMessages(prev => [...prev , Usermsg]);
     setInput("")
+    setIsTyping(true)
+    if(textarearef.current){
+      textarearef.current.style.height = "auto"
+    }
 
     try{
       const response = await fetch("http://localhost:3001/chat" ,{
@@ -49,7 +94,11 @@ const handlesignup = ()=>{
 
     }catch(error){
       setMessages(prev=>[...prev ,{text:"something went wrong , try again " , sender:"bot"}])
+    }finally{
+      setIsTyping(false)
     }
+
+
 
 
     
@@ -75,9 +124,39 @@ const handlesignup = ()=>{
       >
          <div className="flex justify-end mr-3 lg:hidden"><button onClick={()=> setOpen(false)}> <img src={cross} style={{width:20}} alt="" /> </button></div>
         
-       <div className="border-gray-400 h-[500px] mt-5 p-2 rounded-md shadow-2xl bg-gray-100">
-        <h1 className="text-2xl  font-bold border border-t-0 border-l-0 border-r-0">CHAT HISTORY</h1>
-       </div>
+       <div className="border-gray-400 h-[500px] mt-5 p-2 rounded-md shadow-2xl bg-gray-100 overflow-y-auto">
+  <div className="flex justify-between items-center border-b pb-2 mb-2">
+    <h1 className="text-xl font-bold">CHAT HISTORY</h1>
+    <button
+      onClick={startnewchat}
+      className="bg-black text-white text-xs px-2 py-1 rounded-md cursor-pointer"
+    >
+      + New
+    </button>
+  </div>
+
+  {Object.entries(chats).reverse().map(([id, msgs]) => (
+    <div className="flex justify-between">
+    <div
+      key={id}
+      onClick={() => loadChat(id)}
+      className={`p-2 rounded-md cursor-pointer mb-1 text-sm flex truncate ${
+        id === currentChatId ? "bg-blue-100 font-medium" : "hover:bg-gray-200"
+      }`}
+      
+    >
+      {msgs[0]?.text?.slice(0, 25) || "New Chat"}...
+      
+    </div>
+    <div className="  rounded-full flex justify-center items-center  ">
+        <button onClick={()=> deletechat(id)} className="ml-2 text-gray-400 hover:text-red-500 cursor-pointer ">
+ ✕
+        </button>
+      </div>
+      </div>
+  ))}
+  
+</div>
        <div className="border-gray-400 mt-5 h-50 rounded-md shadow-2xl bg-gray-100">
 
         <div className="flex items-center   gap-2">
@@ -100,7 +179,7 @@ const handlesignup = ()=>{
       )}
 
       {/* Main chat area */}
-      <div className="border flex-1 flex flex-col p-2 relative">
+      <div className=" flex-1 flex flex-col p-2 relative">
         <div className="flex justify-end gap-5">
           <button onClick={handlesignup} className="text-white bg-black w-20 h-8 rounded-md cursor-pointer transition-all duration-100 ease-in-out scale-110 active:scale-95">signup</button>
                     <button onClick={ handlenavigate} className="text-white bg-black w-20 h-8 cursor-pointer rounded-md transition-all duration-100 ease-in-out scale-110 active:scale-95">Login</button>
@@ -120,7 +199,7 @@ const handlesignup = ()=>{
       <div
         className={`p-2 shadow-2xl rounded-lg mt-10 ${
           msg.sender === "user"
-            ? "bg-blue-500 text-white"
+            ? "bg-black text-white"
             : "bg-gray-200 text-black font-light font-serif"
         }`}
       >
@@ -150,19 +229,29 @@ const handlesignup = ()=>{
       </div>
     </div>
   ))}
+  { typing && (
+  <div className="flex justify-end">
+    <div className="bg-gray-200 rounded-lg p-3 flex gap-1 items-center">
+      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+    </div>
+  </div>
+)}
   <div ref={messageendref} />
 </div>
 
 
         {/* Input */}
-        <div className="p-3 flex justify-center items-center border rounded-md">
+        <div className="p-3 flex justify-center items-center  rounded-md">
           <textarea
             value={input}
-            className="p-2 w-full rounded-md focus:outline-none"
+            ref={textarearef}
+            className="p-2 border  w-full rounded-md focus:outline-none"
             placeholder="Lets chat"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey)
+              if (e.key === "Enter" )
                 //  e.preventDefault()
                  sendMessage()
             }}
